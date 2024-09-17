@@ -1,0 +1,192 @@
+target:
+- IL8_log
+continuous_cols:
+- cg05114858
+- cg02758987
+- cg05989533
+- cg09140029
+- cg02714932
+- cg20986370
+- cg14320852
+- cg18977839
+- cg16320885
+- cg01995743
+- cg00980776
+- cg07083101
+- cg02570977
+- cg09307883
+- cg23380307
+- cg22871721
+- cg19966378
+- cg04387835
+- cg21865108
+- cg19232382
+- cg08449389
+- cg07676051
+- cg05821046
+- cg13928649
+- cg08590359
+- cg09653364
+- cg20983397
+- cg04676482
+- cg22705746
+- cg08967338
+- cg08344524
+- cg05501868
+- cg10805850
+- cg13643240
+- cg27306537
+- cg27046077
+- cg08183577
+- cg00377497
+- cg26625571
+- cg23897083
+- cg20209308
+- cg23279792
+- cg01272393
+- cg06626087
+- cg07725167
+- cg13393785
+- cg25619551
+- cg21576154
+- cg23926543
+- cg05781417
+- cg07097673
+- cg07426195
+- cg10466221
+- cg06928246
+- cg02438545
+- cg14605117
+- cg06312846
+- cg17841572
+- cg14234680
+- cg11503210
+- cg09613507
+- cg25625561
+- cg22411472
+- cg24040502
+- cg14522441
+- cg05207620
+- cg09012471
+- cg25901662
+- cg19514905
+- cg22837486
+- cg00141153
+- cg22617819
+- cg08542181
+- cg18986956
+- cg14158690
+- cg17365377
+- cg02734358
+- cg18822580
+- cg06593237
+- cg10831285
+- cg18972998
+- cg11488149
+- cg10351287
+- cg16404569
+- cg12271079
+- cg19106945
+- cg26312935
+- cg02921617
+- cg06013378
+- cg05604079
+- cg03041738
+- cg11223544
+- cg04986504
+- cg24739935
+- cg22920404
+- cg17786388
+- cg18221168
+- cg26678383
+- cg16321280
+- cg25340050
+categorical_cols: []
+date_columns: []
+encode_date_columns: true
+validation_split: 0.25
+continuous_feature_transform: null
+normalize_continuous_features: true
+quantile_noise: 0
+num_workers: 0
+pin_memory: true
+handle_unknown_categories: true
+handle_missing_values: true
+task: regression
+head: LinearHead
+head_config:
+  layers: ''
+  activation: ReLU
+  dropout: 0.20289372782484877
+  use_batch_norm: false
+  initialization: xavier
+embedding_dims: null
+embedding_dropout: 0.0
+batch_norm_continuous_input: true
+learning_rate: 0.06127986460547778
+loss: L1Loss
+metrics:
+- mean_absolute_error
+- pearson_corrcoef
+metrics_prob_input:
+- false
+- false
+metrics_params:
+- {}
+- {}
+target_range: null
+virtual_batch_size: null
+seed: 1337
+_module_src: models.gandalf
+_model_name: GANDALFModel
+_backbone_name: GANDALFBackbone
+_config_name: GANDALFConfig
+gflu_stages: 11
+gflu_dropout: 0.19175579991059244
+gflu_feature_init_sparsity: 0.47636486160146496
+learnable_sparsity: true
+batch_size: 1024
+data_aware_init_batch_size: 2000
+fast_dev_run: false
+max_epochs: 1000
+min_epochs: 1
+max_time: null
+accelerator: auto
+devices: -1
+devices_list: null
+accumulate_grad_batches: 1
+auto_lr_find: false
+auto_select_gpus: true
+check_val_every_n_epoch: 1
+gradient_clip_val: 0.0
+overfit_batches: 0.0
+deterministic: false
+profiler: null
+early_stopping: valid_loss
+early_stopping_min_delta: 1.0e-06
+early_stopping_mode: min
+early_stopping_patience: 50
+early_stopping_kwargs: {}
+checkpoints: valid_loss
+checkpoints_path: D:/YandexDisk/Work/bbd/immunology/003_EpImAge/imp_source(imm)_method(knn)_params(5)/no_harm/mrmr_100/IL8/pytorch_tabular
+checkpoints_every_n_epochs: 5
+checkpoints_name: null
+checkpoints_mode: min
+checkpoints_save_top_k: 1
+checkpoints_kwargs: {}
+load_best: true
+track_grad_norm: -1
+progress_bar: none
+precision: 32
+trainer_kwargs: {}
+optimizer: Adam
+optimizer_params:
+  weight_decay: 1.4932867077799234e-07
+lr_scheduler: ReduceLROnPlateau
+lr_scheduler_params:
+  mode: min
+  factor: 0.6662881640410773
+  patience: 25
+  threshold: 0.0001
+lr_scheduler_monitor_metric: valid_loss
+enable_checkpointing: true
