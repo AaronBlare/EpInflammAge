@@ -154,3 +154,5 @@ configs/local/default.yaml
 .aim
 
 out/
+
+.pt_tmp/
