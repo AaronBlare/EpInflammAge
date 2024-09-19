@@ -20,7 +20,8 @@ dir_out = f"{dir_root}/out"
 if not os.path.exists(dir_out):
    os.makedirs(dir_out)
 
-imms = pd.read_excel(f"{dir_root}/models/Immunomarkers/Immunomarkers.xlsx", index_col='feature').index.values
+df_imms = pd.read_excel(f"{dir_root}/models/Immunomarkers/Immunomarkers.xlsx", index_col='feature')
+imms = df_imms.index.values
 imms_log = [f"{f}_log" for f in imms]
 cpgs = pd.read_excel(f"{dir_root}/models/Immunomarkers/CpGs.xlsx", index_col=0).index.values
 
@@ -315,17 +316,14 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
             height=800,
             margin=go.layout.Margin(l=50, r=50, b=50, t=50, pad=0),
         )
-
+        
         # Resulted gradio dict 
         dict_gradio = {
             shap_text_id: gr.update(value=input, visible=True),
             shap_text_age: gr.update(value=f"{trgt_age:.3f}", visible=True),
             shap_text_epimage: gr.update(value=f"{trgt_pred:.3f}", visible=True),
             shap_markdown_cytokines: gr.update(
-                value="""
-                #### CXCL9:
-                TODO
-                """,
+                value="### Most important cytokines:\n" + '\n'.join(df_imms.loc[df_shap.index.values[:-4:-1], 'Text'].to_list()),
                 visible=True
             ),
             shap_plot: gr.update(value=fig, visible=True),
