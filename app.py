@@ -1,3 +1,4 @@
+from turtle import width
 import gradio as gr
 from pytorch_tabular import TabularModel
 import shap
@@ -231,22 +232,24 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
             col=1,
         )
         fig.update_yaxes(
+            row=1,
+            col=1,
+            automargin=True,
             tickmode="array",
             tickvals=[-1.5] + list(range(df_shap.shape[0])) + [df_shap.shape[0] + 0.5],
-            ticktext=["Chrono"] + df_shap.index.to_list() + ["EpImAge"],
+            ticktext=["Chrono Age"] + df_shap.index.to_list() + ["EpImAge"],
             tickfont=dict(size=16),
-            row=1,
-            col=1
         )
         fig.update_xaxes(
+            row=1,
+            col=1,
+            automargin=True,
             title='Age',
             titlefont=dict(size=20),
             range=[
                 trgt_age - df_shap['cumsum'].abs().max() * 1.25,
                 trgt_age + df_shap['cumsum'].abs().max() * 1.25
             ],
-            row=1,
-            col=1
         )
         fig.update_traces(row=1, col=1, showlegend=False)
 
@@ -262,7 +265,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
                 textposition='auto'
             ),
             row=1,
-            col=2
+            col=2,
         )
         fig.add_trace(
             go.Bar(
@@ -279,27 +282,29 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
             col=2
         )
         fig.update_xaxes(
+            row=1,
+            col=2,
+            automargin=True,
             showgrid=False,
             showline=False,
             zeroline=False,
             showticklabels=False,
-            row=1,
-            col=2
         )
         fig.update_yaxes(
+            row=1,
+            col=2,
+            automargin=True,
             showgrid=False,
             showline=False,
             zeroline=False,
             showticklabels=False,
-            row=1,
-            col=2
         )
         
         fig.update_layout(barmode="relative")
         fig.update_layout(
             legend=dict(
-                title=dict(text="Immunomarkers disribution<br>in samples with same age", side="top center"),
-                orientation="v",
+                title=dict(text="Immunomarkers disribution<br>in samples with same age", side="top"),
+                orientation="h",
                 yanchor="bottom",
                 y=0.95,
                 xanchor="center",
@@ -308,13 +313,9 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
         )
 
         fig.update_layout(
-            title_text="",
-            # title=f"{trgt_id} XAI age acceleration",
-            # titlefont=dict(size=25),
             template="none",
             width=800,
             height=800,
-            margin=go.layout.Margin(l=50, r=50, b=50, t=50, pad=0),
         )
         
         # Resulted gradio dict 
@@ -408,6 +409,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
         fig.update_xaxes(
             row=1,
             col=1,
+            automargin=True,
             title_text="Age",
             autorange=False,
             range=[min_plot_age, max_plot_age],
@@ -435,6 +437,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
         fig.update_yaxes(
             row=1,
             col=1,
+            automargin=True,
             title_text=f"EpImAge",
             # scaleanchor="x",
             # scaleratio=1,
@@ -482,6 +485,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
         fig.update_yaxes(
             row=1,
             col=2,
+            automargin=True,
             title_text="Age Acceleraton",
             autorange=True,
             showgrid=False,
@@ -506,6 +510,9 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
             showexponent='all'
         )
         fig.update_xaxes(
+            row=1,
+            col=2,
+            automargin=True,
             autorange=False,
             range=[-0.5, 0.3],
             showgrid=False,
@@ -515,11 +522,12 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
             mirror=True,
             ticks='outside',
             tickvals=[],
-            row=1,
-            col=2
+
         )
         fig.update_layout(
             template="simple_white",
+            width=800,
+            height=500,
         )
         
         # Resulted gradio dict 
