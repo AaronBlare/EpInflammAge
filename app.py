@@ -13,6 +13,7 @@ import gradio as gr
 from tqdm import tqdm
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+from sklearn.impute import KNNImputer, SimpleImputer
 
 
 dir_root = Path(os.getcwd())
@@ -33,7 +34,8 @@ for imm in (pbar := tqdm(imms)):
 
 model_age = TabularModel.load_model(f"{dir_root}/models/EpImAge")
 
-bkgrd = pd.read_pickle(f"{dir_root}/models/Background.pkl")
+bkgrd_xai = pd.read_pickle(f"{dir_root}/models/background-xai.pkl")
+bkgrd_imp = pd.read_pickle(f"{dir_root}/models/background-imputation.pkl")
 
 
 def predict_func(X):
@@ -70,20 +72,21 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
                 - Upload your methylation data for 2228 CpGs from [File](https://github.com/GillianGrayson/EpImAge/tree/main/data/CpGs.xlsx).
                 - The first column must be a sample ID.
                 - Your data must contain `Age` column for metrics (MAE and Pearson Rho) and Age Acceleration calculation.
-                - Missing values should be `NA` in the corresponding cells.<br>
-                Imputation of missing values will be performed using the KNN method with all methylation data from the [Paper]().
+                - Missing values should be `NA` in the corresponding cells.
+                - [Imputation](https://scikit-learn.org/stable/modules/impute.html) of missing values can be performed using KNN, Mean, and Median methods with all methylation data from the [Paper]().
                 - Data expample for GSE87571: [File](https://github.com/GillianGrayson/EpImAge/tree/main/data/GSE87571.xlsx).
                 """,
             )
             input_file = gr.File(label='Methylation Data File', file_count='single', file_types=['.xlsx', 'csv'])
-            button_submit = gr.Button("Submit data", variant="primary", interactive=False)
+            calc_radio = gr.Radio(choices=["KNN", "Mean", "Median"], value="KNN", label="Imputation method")
+            calc_button = gr.Button("Submit data", variant="primary", interactive=False)
         with gr.Column(min_width=800):
             with gr.Row():
                 output_file = gr.File(label='Result File', file_types=['.xlsx'], interactive=False, visible=False)
-                output_mae = gr.Text(label='Mean Absolute Error', visible=False)
-                output_rho = gr.Text(label='Pearson Correlation', visible=False)
+                calc_mae = gr.Text(label='Mean Absolute Error', visible=False)
+                calc_rho = gr.Text(label='Pearson Correlation', visible=False)
             with gr.Row():
-                plot_results = gr.Plot(label='EpImAge Vs Age', visible=False, show_label=False)
+                calc_plot = gr.Plot(visible=False, show_label=False)
     
     shap_markdown_main = gr.Markdown(
         """
@@ -118,13 +121,12 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
     
        
     def clear():
-        data = pd.DataFrame()
         dict_gradio = {
-            button_submit: gr.update(interactive=False),
+            calc_button: gr.update(interactive=False),
             output_file: gr.update(value=None, visible=False), 
-            output_mae: gr.update(value=None, visible=False),
-            output_rho: gr.update(value=None, visible=False),
-            plot_results: gr.update(value=None, visible=False),
+            calc_mae: gr.update(value=None, visible=False),
+            calc_rho: gr.update(value=None, visible=False),
+            calc_plot: gr.update(value=None, visible=False),
             shap_markdown_main: gr.update(visible=False),
             shap_dropdown: gr.update(value=None, visible=False),
             shap_button: gr.update(visible=False),
@@ -137,12 +139,12 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
         return dict_gradio
     
     
-    def make_visible_results():
+    def progress_for_calc():
         dict_gradio = {
             output_file: gr.update(value=None, visible=False), 
-            output_mae: gr.update(value=None, visible=False),
-            output_rho: gr.update(value=None, visible=False),
-            plot_results: gr.update(visible=True),
+            calc_mae: gr.update(value=None, visible=False),
+            calc_rho: gr.update(value=None, visible=False),
+            calc_plot: gr.update(visible=True),
             shap_markdown_main: gr.update(visible=False),
             shap_dropdown: gr.update(value=None, visible=False),
             shap_button: gr.update(visible=False),
@@ -155,7 +157,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
         return dict_gradio
     
     
-    def make_visible_shap():
+    def progress_for_shap():
         dict_gradio = {
             shap_text_id: gr.update(value=None, visible=False),
             shap_text_age: gr.update(value=None, visible=False),
@@ -175,7 +177,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
         trgt_aa = trgt_pred - trgt_age
         
         n_closest = 200
-        data_closest = bkgrd.iloc[(bkgrd['EpImAge'] - trgt_age).abs().argsort()[:n_closest]]
+        data_closest = bkgrd_xai.iloc[(bkgrd_xai['EpImAge'] - trgt_age).abs().argsort()[:n_closest]]
         explainer = shap.SamplingExplainer(predict_func, data_closest.loc[:, imms_log])
         shap_values = explainer.shap_values(data.loc[[trgt_id], imms_log].values)[0]
         shap_values = shap_values * (trgt_pred - trgt_age) / (trgt_pred - explainer.expected_value)
@@ -334,26 +336,44 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
     
     def calc_epimage(input, progress=gr.Progress()):
         
-        progress(0.0, desc='Reading input data file')
         # Read input data file
-        if input.endswith('xlsx'):
-            data = pd.read_excel(input, index_col=0)
-        elif input.endswith('csv'):
-            data = pd.read_csv(input, index_col=0)
+        progress(0.0, desc='Reading input data file')
+        if input[input_file].endswith('xlsx'):
+            data = pd.read_excel(input[input_file], index_col=0)
+        elif input[input_file].endswith('csv'):
+            data = pd.read_csv(input[input_file], index_col=0)
         else:
             raise gr.Error(f"Unknown file type!")
         
-        progress(0.6, desc='Checking features in input file')
         # Check features in input file
+        progress(0.2, desc='Checking features in input file')
         missed_cpgs = list(set(cpgs) - set(data.columns.values))
         if len(missed_cpgs) > 0:
             raise gr.Error(f"Missed {len(missed_cpgs)} CpGs in the input file!")
         
+        # Imputation of missing values
+        imp_method = input[calc_radio]
+        data.replace({'NA': np.nan}, inplace=True)
+        n_nans = data.isna().sum().sum()
+        if n_nans > 0:
+            print(f"Imputation of {n_nans} missing values using {imp_method} method")
+            progress(0.8, desc=f"Imputation of {n_nans} missing values using {imp_method} method")
+            bkgrd_imp.set_index(bkgrd_imp.index.astype(str) + f'_imputation_{imp_method}', inplace=True)
+            data_all = pd.concat([data, bkgrd_imp], axis=0, verify_integrity=True)
+            if imp_method == "KNN":
+                imputer = KNNImputer(n_neighbors=5)
+            elif imp_method == 'Mean':
+                imputer = SimpleImputer(strategy='mean')
+            elif imp_method == 'Median':
+                imputer = SimpleImputer(strategy='median')
+            data_all.loc[:, cpgs] = imputer.fit_transform(data_all.loc[:, cpgs].values) 
+            data.loc[data.index, cpgs] = data_all.loc[data.index, cpgs]
+                
         # Models' inference
-        progress(0.7, desc="Immunology models' inference")
+        progress(0.9, desc="Immunology models' inference")
         for imm in imms:
             data[f"{imm}_log"] = models_imms[imm].predict(data)
-        progress(0.8, desc='EpImAge model inference')
+        progress(0.95, desc='EpImAge model inference')
         data['EpImAge'] = model_age.predict(data.loc[:, [f"{imm}_log" for imm in imms]])
         data['Age Acceleration'] = data['EpImAge'] - data['Age']
         data.to_pickle(f'{dir_out}/data.pkl')
@@ -365,8 +385,8 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
             mae = mean_absolute_error(data['Age'].values, data['EpImAge'].values)
             rho = scipy.stats.pearsonr(data['Age'].values, data['EpImAge'].values).statistic
         
-        progress(0.9, desc='Plotting scatter')
         # Plot scatter
+        progress(0.98, desc='Plotting scatter')
         fig = make_subplots(rows=1, cols=2, shared_yaxes=False, shared_xaxes=False, column_widths=[5, 3], horizontal_spacing=0.15)
         min_plot_age = data[["Age", "EpImAge"]].min().min()
         max_plot_age = data[["Age", "EpImAge"]].max().max()
@@ -527,15 +547,15 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
         fig.update_layout(
             template="simple_white",
             width=800,
-            height=500,
+            height=450,
         )
         
         # Resulted gradio dict 
         dict_gradio = {
             output_file: gr.update(value=f'{dir_out}/Result.xlsx', visible=True),
-            plot_results: gr.update(value=fig, visible=True),
-            output_mae: gr.update(value=f"{mae:.3f}", visible=True),
-            output_rho: gr.update(value=f"{rho:.3f}", visible=True) if data.shape[0] > 1 else gr.update(value='Only one sample.\nNo metrics can be calculated.', visible=True),
+            calc_plot: gr.update(value=fig, visible=True),
+            calc_mae: gr.update(value=f"{mae:.3f}", visible=True),
+            calc_rho: gr.update(value=f"{rho:.3f}", visible=True) if data.shape[0] > 1 else gr.update(value='Only one sample.\nNo metrics can be calculated.', visible=True),
             shap_markdown_main: gr.update(visible=True),
             shap_dropdown: gr.update(choices=list(data.index.values), value=list(data.index.values)[0], interactive=True, visible=True),
             shap_button: gr.update(visible=True)
@@ -544,28 +564,28 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
         return dict_gradio
     
     
-    button_submit.click(
-        fn=make_visible_results,
+    calc_button.click(
+        fn=progress_for_calc,
         inputs=[],
-        outputs=[output_file, plot_results, output_mae, output_rho, shap_markdown_main, shap_dropdown, shap_button, shap_text_id, shap_text_age, shap_text_epimage, shap_markdown_cytokines, shap_plot]
+        outputs=[output_file, calc_plot, calc_mae, calc_rho, shap_markdown_main, shap_dropdown, shap_button, shap_text_id, shap_text_age, shap_text_epimage, shap_markdown_cytokines, shap_plot]
     )
-    button_submit.click(
+    calc_button.click(
         fn=calc_epimage,
-        inputs=[input_file],
-        outputs=[output_file, plot_results, output_mae, output_rho, shap_markdown_main, shap_dropdown, shap_button]
+        inputs={input_file, calc_radio},
+        outputs=[output_file, calc_plot, calc_mae, calc_rho, shap_markdown_main, shap_dropdown, shap_button]
     )
     input_file.clear(
         fn=clear,
         inputs=[],
-        outputs=[button_submit, output_mae, output_rho, output_file, plot_results, shap_markdown_main, shap_dropdown, shap_button, shap_text_id, shap_text_age, shap_text_epimage, shap_markdown_cytokines, shap_plot]
+        outputs=[calc_button, calc_mae, calc_rho, output_file, calc_plot, shap_markdown_main, shap_dropdown, shap_button, shap_text_id, shap_text_age, shap_text_epimage, shap_markdown_cytokines, shap_plot]
     )
     input_file.upload(
         fn=check_size,
         inputs=[input_file],
-        outputs=[button_submit]
+        outputs=[calc_button]
     )
     shap_button.click(
-        fn=make_visible_shap,
+        fn=progress_for_shap,
         inputs=[],
         outputs=[shap_text_id, shap_text_age, shap_text_epimage, shap_markdown_cytokines, shap_plot]
     )
