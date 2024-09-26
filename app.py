@@ -14,13 +14,13 @@ from tqdm import tqdm
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from sklearn.impute import KNNImputer, SimpleImputer
+import shutil
 
 
 dir_root = Path(os.getcwd())
 
 dir_out = f"{dir_root}/out"
-if not os.path.exists(dir_out):
-   os.makedirs(dir_out)
+Path(dir_out).mkdir(parents=True, exist_ok=True)
 
 df_imms = pd.read_excel(f"{dir_root}/models/Immunomarkers/Immunomarkers.xlsx", index_col='feature')
 imms = df_imms.index.values
@@ -55,7 +55,7 @@ function refresh() {
 }
 """
 
-with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
+with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func, delete_cache=(3600, 3600)) as app:
     
     gr.Markdown(
         """
@@ -120,7 +120,12 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
             return gr.update(interactive=True)
     
        
-    def clear():
+    def clear(request: gr.Request):
+        dir_to_del = f"{dir_out}/{str(request.session_hash)}"
+        if Path(dir_to_del).exists() and Path(dir_to_del).is_dir():
+            print(f"Delete cache: {dir_to_del}")
+            shutil.rmtree(f"{dir_out}/{str(request.session_hash)}")
+        
         dict_gradio = {
             calc_button: gr.update(interactive=False),
             output_file: gr.update(value=None, visible=False), 
@@ -138,6 +143,13 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
         }
         return dict_gradio
     
+    
+    def delete_directory(request: gr.Request):        
+        dir_to_del = f"{dir_out}/{str(request.session_hash)}"
+        if Path(dir_to_del).exists() and Path(dir_to_del).is_dir():
+            print(f"Delete cache: {dir_to_del}")
+            shutil.rmtree(f"{dir_out}/{str(request.session_hash)}")
+        
     
     def progress_for_calc():
         dict_gradio = {
@@ -168,9 +180,11 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
         return dict_gradio
     
     
-    def explain(input, progress=gr.Progress()):
+    def explain(input, request: gr.Request, progress=gr.Progress()):
+        print(f"Read from cache: {dir_out}/{str(request.session_hash)}")
+        
         progress(0.0, desc='SHAP values calculation')
-        data = pd.read_pickle(f'{dir_out}/data.pkl')
+        data = pd.read_pickle(f"{dir_out}/{str(request.session_hash)}/data.pkl")
         trgt_id = input
         trgt_age = data.at[trgt_id, 'Age']
         trgt_pred = data.at[trgt_id, 'EpImAge']
@@ -334,7 +348,9 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
         return dict_gradio
     
     
-    def calc_epimage(input, progress=gr.Progress()):
+    def calc_epimage(input, request: gr.Request, progress=gr.Progress()):
+        print(f"Create cache: {dir_out}/{str(request.session_hash)}")
+        Path(f"{dir_out}/{str(request.session_hash)}").mkdir(parents=True, exist_ok=True)
         
         # Read input data file
         progress(0.0, desc='Reading input data file')
@@ -376,10 +392,10 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
         progress(0.95, desc='EpImAge model inference')
         data['EpImAge'] = model_age.predict(data.loc[:, [f"{imm}_log" for imm in imms]])
         data['Age Acceleration'] = data['EpImAge'] - data['Age']
-        data.to_pickle(f'{dir_out}/data.pkl')
+        data.to_pickle(f'{dir_out}/{str(request.session_hash)}/data.pkl')
         
         data_res = data[['Age', 'EpImAge', 'Age Acceleration'] + list(imms_log)]
-        data_res.rename(columns={f"{imm}_log": imm for imm in imms}).to_excel(f'{dir_out}/Result.xlsx', index_label='ID')
+        data_res.rename(columns={f"{imm}_log": imm for imm in imms}).to_excel(f'{dir_out}/{str(request.session_hash)}/Result.xlsx', index_label='ID')
 
         if len(data_res) > 1:
             mae = mean_absolute_error(data['Age'].values, data['EpImAge'].values)
@@ -552,7 +568,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
         
         # Resulted gradio dict 
         dict_gradio = {
-            output_file: gr.update(value=f'{dir_out}/Result.xlsx', visible=True),
+            output_file: gr.update(value=f'{dir_out}/{str(request.session_hash)}/Result.xlsx', visible=True),
             calc_plot: gr.update(value=fig, visible=True),
             calc_mae: gr.update(value=f"{mae:.3f}", visible=True),
             calc_rho: gr.update(value=f"{rho:.3f}", visible=True) if data.shape[0] > 1 else gr.update(value='Only one sample.\nNo metrics can be calculated.', visible=True),
@@ -594,6 +610,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func) as app:
         inputs=[shap_dropdown],
         outputs=[shap_text_id, shap_text_age, shap_text_epimage, shap_markdown_cytokines, shap_plot]
     )
+    app.unload(delete_directory)
 
 
 app.launch(show_error=True)
