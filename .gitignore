@@ -162,3 +162,5 @@ models/background-imputation.pkl
 models/background-xai.pkl
 
 lightning_logs/
+
+plots/
