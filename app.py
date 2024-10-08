@@ -1,4 +1,3 @@
-from turtle import width
 import gradio as gr
 from pytorch_tabular import TabularModel
 import shap
