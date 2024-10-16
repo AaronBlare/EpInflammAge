@@ -19,6 +19,8 @@ import shutil
 dir_root = Path(os.getcwd())
 
 dir_out = f"{dir_root}/out"
+if Path(dir_out).exists():
+    shutil.rmtree(Path(dir_out))
 Path(dir_out).mkdir(parents=True, exist_ok=True)
 
 df_imms = pd.read_excel(f"{dir_root}/models/Immunomarkers/Immunomarkers.xlsx", index_col='feature')
@@ -74,6 +76,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func, delete_cache
                 - Missing values should be `NA` in the corresponding cells.
                 - [Imputation](https://scikit-learn.org/stable/modules/impute.html) of missing values can be performed using KNN, Mean, and Median methods with all methylation data from the [Paper]().
                 - Data expample for GSE87571: [File](https://github.com/GillianGrayson/EpImAge/tree/main/data/examples/GSE87571.xlsx).
+                - Calculations take a few minutes, the plot can be displayed slightly later than the results. If imputation is performed, the calculations will take longer.
                 """,
             )
             input_file = gr.File(label='Methylation Data File', file_count='single', file_types=['.xlsx', 'csv'])
