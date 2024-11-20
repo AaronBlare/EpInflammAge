@@ -75,7 +75,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func, delete_cache
                 - Your data must contain `Age` column for metrics (MAE and Pearson Rho) and Age Acceleration calculation.
                 - Missing values should be `NA` in the corresponding cells.
                 - [Imputation](https://scikit-learn.org/stable/modules/impute.html) of missing values can be performed using KNN, Mean, and Median methods with all methylation data from the [Paper]().
-                - Data expample for GSE87571: [File](https://github.com/GillianGrayson/EpImAge/tree/main/data/examples/GSE87571.xlsx).
+                - Data example for GSE87571: [File](https://github.com/GillianGrayson/EpImAge/tree/main/data/examples/GSE87571.xlsx).
                 - Calculations take a few minutes, the plot can be displayed slightly later than the results. If imputation is performed, the calculations will take longer.
                 """,
             )
