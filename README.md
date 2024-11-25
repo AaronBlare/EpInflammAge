@@ -4,10 +4,10 @@
 
 </div>
 
-Repository with source code and Gradio [application]() for EpImAge model.
+Repository with source code and [Gradio Application](https://huggingface.co/spaces/UNNAILab/EpImAge) for EpImAge model.
 
 ## Paper
-[**EpImAge: a new disease-sensitive clock at the interconnection of immunology and epigenetics**]() by 
+**EpImAge: An Epigenetic-Immune Clock for Disease-Associated Biological Aging** by 
 [A. Kalyakulina](https://orcid.org/0000-0001-9277-502X),
 [I. Yusipov](http://orcid.org/0000-0002-0540-9281),
 [C. Franceschi](http://orcid.org/0000-0001-9841-6386),
@@ -16,7 +16,12 @@ Repository with source code and Gradio [application]() for EpImAge model.
 
 
 ## Abstract
-We present a new explainable model of disease-sensitive epigenetic-immunological clock (EpImAge) based on the modern deep neural networks. In the first step, we used our own epigenetic and immunologic data obtained for the same participants to build AI models that can predict levels of 24 cytokines from blood DNA methylation levels. In the second step, we used epigenetic data from open sources (GEO repository) to generate synthetic immunological biomarkers and use them further to build the age estimation model. We collected more than 25 thousand DNAm samples from 72 datasets, for which we obtained cytokines levels using the constructed models. The use of state-of-the-art deep neural networks specialized for tabular data allowed us to achieve good quality metrics for healthy controls: overall MAE of about 7 years and a Pearson correlation of 0.85, as well as sensitivity to diseases from different chapters of ICD-11. Comparison with 33 other epigenetic clock models showed that our model is among the top ones in both criteria - age prediction error and number of detected diseases. The use of explainable AI approaches allows us to investigate the impact of each individual cytokine contributes to the resulting age prediction.
+We present EpImAge, an explainable deep learning tool that integrates epigenetic and immunological markers to create a highly accurate, disease-sensitive biological age predictor. This novel approach bridges two key hallmarks of aging - epigenetic alterations and immunosenescence. 
+First, epigenetic and immunologic data from the same participants was used for AI models predicting levels of 24 cytokines from blood DNA methylation. Second, open-source epigenetic data (25 thousand samples) was used for generating synthetic immunological biomarkers and training an age estimation model.
+Using state-of-the-art deep neural networks optimized for tabular data analysis, EpImAge achieves competitive performance metrics against 33 epigenetic clock models, including an overall mean absolute error (MAE) of 7 years and a Pearson correlation of 0.85 in healthy controls, while demonstrating robust sensitivity across multiple disease categories. Explainable AI revealed the contribution of each immunological feature to the age prediction.
+The sensitivity to multiple diseases due to combining immunologic and epigenetic profiles is promising for both research and clinical applications. 
+EpImAge is released as an easy-to-use web tool that allows for uploading methylation data to receive the estimates of age and levels of immunological parameters, supplied with the detailed report on the contribution of input variables to the output of the model for each sample.
+
 
 ## Project Structure
 ```
@@ -53,9 +58,7 @@ We present a new explainable model of disease-sensitive epigenetic-immunological
 │
 ├── requirements.txt              <- File for installing python dependencies
 │
-├── README.md                     <- This file
-│
-└── LICENSE                       <- Licence file
+└── README.md                     <- This file
 ```
 
 ## Install dependencies
@@ -75,7 +78,3 @@ conda activate env_name
 # install requirements
 pip install -r requirements.txt
 ```
-
-## License
-
-This repository is licensed under * License.
