@@ -88,7 +88,7 @@ conda activate env_name
 pip install -r requirements.txt
 ```
 
-## Run Gradio applycation locally
+## Run Gradio application locally
 
 ```bash
 python app.py
