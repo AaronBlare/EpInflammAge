@@ -22,7 +22,7 @@ and immunosenescence. First, epigenetic and immunologic data from the same parti
 models predicting levels of 24 cytokines from blood DNA methylation. Second, open-source epigenetic data 
 (25 thousand samples) was used for generating synthetic immunological biomarkers and training an age 
 estimation model. Using state-of-the-art deep neural networks optimized for tabular data analysis, 
-EpImAge achieves competitive performance metrics against 33 epigenetic clock models, including an 
+EpImAge achieves competitive performance metrics against 34 epigenetic clock models, including an 
 overall mean absolute error of 7 years and a Pearson correlation of 0.85 in healthy controls, 
 while demonstrating robust sensitivity across multiple disease categories. Explainable AI revealed 
 the contribution of each immunological feature to the age prediction. The sensitivity to multiple 
@@ -86,4 +86,10 @@ conda activate env_name
 
 # install requirements
 pip install -r requirements.txt
+```
+
+## Run Gradio applycation locally
+
+```bash
+python app.py
 ```
