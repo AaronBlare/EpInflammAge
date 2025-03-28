@@ -23,17 +23,17 @@ if Path(dir_out).exists():
     shutil.rmtree(Path(dir_out))
 Path(dir_out).mkdir(parents=True, exist_ok=True)
 
-df_imms = pd.read_excel(f"{dir_root}/models/Immunomarkers/Immunomarkers.xlsx", index_col='feature')
+df_imms = pd.read_excel(f"{dir_root}/models/InflammatoryMarkers/InflammatoryMarkers.xlsx", index_col='feature')
 imms = df_imms.index.values
 imms_log = [f"{f}_log" for f in imms]
-cpgs = pd.read_excel(f"{dir_root}/models/Immunomarkers/CpGs.xlsx", index_col=0).index.values
+cpgs = pd.read_excel(f"{dir_root}/models/InflammatoryMarkers/CpGs.xlsx", index_col=0).index.values
 
 models_imms = {}
 for imm in (pbar := tqdm(imms)):
     pbar.set_description(f"Loading model for {imm}")
-    models_imms[imm] = TabularModel.load_model(f"{dir_root}/models/Immunomarkers/{imm}")
+    models_imms[imm] = TabularModel.load_model(f"{dir_root}/models/InflammatoryMarkers/{imm}")
 
-model_age = TabularModel.load_model(f"{dir_root}/models/EpImAge")
+model_age = TabularModel.load_model(f"{dir_root}/models/EpInflammAge")
 
 bkgrd_xai = pd.read_pickle(f"{dir_root}/models/background-xai.pkl")
 bkgrd_imp = pd.read_pickle(f"{dir_root}/models/background-imputation.pkl")
@@ -56,11 +56,11 @@ function refresh() {
 }
 """
 
-with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func, delete_cache=(3600, 3600)) as app:
+with gr.Blocks(theme=gr.themes.Soft(), title='EpInflammAge', js=js_func, delete_cache=(3600, 3600)) as app:
     
     gr.Markdown(
         """
-        # EpImAge Calculator
+        # EpInflammAge Calculator
         ## Submit epigenetics data
         """
     )
@@ -70,12 +70,12 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func, delete_cache
             gr.Markdown(
                 """
                 ### Instruction
-                - Upload your methylation data for 2228 CpGs from [File](https://github.com/GillianGrayson/EpImAge/tree/main/data/CpGs.xlsx).
+                - Upload your methylation data for 2228 CpGs from [File](https://github.com/GillianGrayson/EpInflammAge/tree/main/data/CpGs.xlsx).
                 - The first column must be a sample ID.
                 - Your data must contain `Age` column for metrics (MAE and Pearson Rho) and Age Acceleration calculation.
                 - Missing values should be `NA` in the corresponding cells.
                 - [Imputation](https://scikit-learn.org/stable/modules/impute.html) of missing values can be performed using KNN, Mean, and Median methods with all methylation data from the [Paper]().
-                - Data example for GSE87571: [File](https://github.com/GillianGrayson/EpImAge/tree/main/data/examples/GSE87571.xlsx).
+                - Data example for GSE87571: [File](https://github.com/GillianGrayson/EpInflammAge/tree/main/data/examples/GSE87571.xlsx).
                 - Calculations take a few minutes, the plot can be displayed slightly later than the results. If imputation is performed, the calculations will take longer.
                 """,
             )
@@ -98,12 +98,12 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func, delete_cache
     
     with gr.Row():
         with gr.Column():
-            shap_dropdown = gr.Dropdown(label='Choose a sample to get an explanation of the EpImAge prediction', filterable=True, visible=False)
+            shap_dropdown = gr.Dropdown(label='Choose a sample to get an explanation of the EpInflammAge prediction', filterable=True, visible=False)
             shap_button = gr.Button("Get explanation", variant="primary", visible=False)
             with gr.Row():
                 shap_text_id = gr.Text(label='Sample', visible=False)
                 shap_text_age = gr.Text(label='Age', visible=False)
-                shap_text_epimage = gr.Text(label='EpImAge', visible=False)
+                shap_text_epimage = gr.Text(label='EpInflammAge', visible=False)
             shap_markdown_cytokines = gr.Markdown(
                 """
                 ### Most important cytokines:
@@ -189,7 +189,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func, delete_cache
         data = pd.read_pickle(f"{dir_out}/{str(request.session_hash)}/data.pkl")
         trgt_id = input
         trgt_age = data.at[trgt_id, 'Age']
-        trgt_pred = data.at[trgt_id, 'EpImAge']
+        trgt_pred = data.at[trgt_id, 'EpInflammAge']
         trgt_aa = trgt_pred - trgt_age
         
         n_closest = 200
@@ -210,7 +210,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func, delete_cache
         fig = make_subplots(rows=1, cols=2, shared_yaxes=True, shared_xaxes=False, column_widths=[2.5, 1], horizontal_spacing=0.05, row_titles=[''])
         fig.add_trace(
             go.Waterfall(
-                hovertext=["Chrono Age", "EpImAge"],
+                hovertext=["Chrono Age", "EpInflammAge"],
                 orientation="h",
                 measure=['absolute', 'relative'],
                 y=[-1.5, df_shap.shape[0] + 0.5],
@@ -255,7 +255,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func, delete_cache
             automargin=True,
             tickmode="array",
             tickvals=[-1.5] + list(range(df_shap.shape[0])) + [df_shap.shape[0] + 0.5],
-            ticktext=["Chrono Age"] + df_shap.index.to_list() + ["EpImAge"],
+            ticktext=["Chrono Age"] + df_shap.index.to_list() + ["EpInflammAge"],
             tickfont=dict(size=16),
         )
         fig.update_xaxes(
@@ -321,7 +321,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func, delete_cache
         fig.update_layout(barmode="relative")
         fig.update_layout(
             legend=dict(
-                title=dict(text="Immunomarkers disribution<br>in samples with same age", side="top"),
+                title=dict(text="Inflammatory markers disribution<br>in samples with same age", side="top"),
                 orientation="h",
                 yanchor="bottom",
                 y=0.95,
@@ -388,26 +388,26 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func, delete_cache
             data.loc[data.index, cpgs] = data_all.loc[data.index, cpgs]
                 
         # Models' inference
-        progress(0.9, desc="Immunology models' inference")
+        progress(0.9, desc="Inflammatory models' inference")
         for imm in imms:
             data[f"{imm}_log"] = models_imms[imm].predict(data)
-        progress(0.95, desc='EpImAge model inference')
-        data['EpImAge'] = model_age.predict(data.loc[:, [f"{imm}_log" for imm in imms]])
-        data['Age Acceleration'] = data['EpImAge'] - data['Age']
+        progress(0.95, desc='EpInflammAge model inference')
+        data['EpInflammAge'] = model_age.predict(data.loc[:, [f"{imm}_log" for imm in imms]])
+        data['Age Acceleration'] = data['EpInflammAge'] - data['Age']
         data.to_pickle(f'{dir_out}/{str(request.session_hash)}/data.pkl')
         
-        data_res = data[['Age', 'EpImAge', 'Age Acceleration'] + list(imms_log)]
+        data_res = data[['Age', 'EpInflammAge', 'Age Acceleration'] + list(imms_log)]
         data_res.rename(columns={f"{imm}_log": imm for imm in imms}).to_excel(f'{dir_out}/{str(request.session_hash)}/Result.xlsx', index_label='ID')
 
         if len(data_res) > 1:
-            mae = mean_absolute_error(data['Age'].values, data['EpImAge'].values)
-            rho = scipy.stats.pearsonr(data['Age'].values, data['EpImAge'].values).statistic
+            mae = mean_absolute_error(data['Age'].values, data['EpInflammAge'].values)
+            rho = scipy.stats.pearsonr(data['Age'].values, data['EpInflammAge'].values).statistic
         
         # Plot scatter
         progress(0.98, desc='Plotting scatter')
         fig = make_subplots(rows=1, cols=2, shared_yaxes=False, shared_xaxes=False, column_widths=[5, 3], horizontal_spacing=0.15)
-        min_plot_age = data[["Age", "EpImAge"]].min().min()
-        max_plot_age = data[["Age", "EpImAge"]].max().max()
+        min_plot_age = data[["Age", "EpInflammAge"]].min().min()
+        max_plot_age = data[["Age", "EpInflammAge"]].max().max()
         shift_plot_age = max_plot_age - min_plot_age
         min_plot_age -= 0.1 * shift_plot_age
         max_plot_age += 0.1 * shift_plot_age
@@ -426,7 +426,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func, delete_cache
             go.Scatter(
                 name='Scatter',
                 x=data.loc[:, 'Age'].values,
-                y=data.loc[:, 'EpImAge'].values,
+                y=data.loc[:, 'EpInflammAge'].values,
                 text=data.index.values,
                 hovertext=data.index.values,
                 showlegend=False,
@@ -476,7 +476,7 @@ with gr.Blocks(theme=gr.themes.Soft(), title='EpImAge', js=js_func, delete_cache
             row=1,
             col=1,
             automargin=True,
-            title_text=f"EpImAge",
+            title_text=f"EpInflammAge",
             # scaleanchor="x",
             # scaleratio=1,
             autorange=False,
