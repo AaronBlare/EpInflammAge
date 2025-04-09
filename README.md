@@ -78,6 +78,8 @@ pip install -r requirements.txt
 
 ## Run Gradio application locally
 
+Gradio Application for EpInflammAge model, which is hosted on [HuggingFace](https://huggingface.co/spaces/UNNAILab/EpInflammAge), can be run locally:
+
 ```bash
 python app.py
 ```
