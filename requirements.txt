@@ -37,3 +37,5 @@ hydra-optuna-sweeper==1.2.0
 
 # --------- utils --------- #
 tqdm
+rootutils
+captum

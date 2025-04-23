@@ -43,9 +43,13 @@ We present EpInflammAge, an explainable deep learning tool that integrates epige
 │   └── EpInflammAge                  <- EpInflammAge model
 │
 ├── notebooks                     <- Jupyter notebooks 
+│   ├── figures           <- Directory for jupyter notebooks that build individual figures
+│   │   ├── figure2a                         <- Plotting Figure 2A
+│   │   ├── figure2b                         <- Plotting Figure 2B
+│   │   └── ...                           <- Plotting other Figures
 │   ├── 1-cytokines-regression        <- Training cytokines models
 │   ├── 2-age-regression              <- Training EpInflammAge
-│   └── 3-plotting                    <- Plotting figures
+│   └── 3-plotting                    <- Plotting all figures
 │
 ├── plots                         <- Directory for plotted figures
 │
@@ -57,6 +61,8 @@ We present EpInflammAge, an explainable deep learning tool that integrates epige
 │
 └── README.md                     <- This file
 ```
+
+```1-cytokines-regression``` and ```2-age-regression``` scripts contain code for training the models and may take considerable amount of time to calculate.
 
 ## Install dependencies
 
@@ -75,6 +81,8 @@ conda activate env_name
 # install requirements
 pip install -r requirements.txt
 ```
+
+Additional files [background-imputation.pkl](https://huggingface.co/spaces/UNNAILab/EpInflammAge/blob/main/models/background-imputation.pkl) and [background-xai.pkl](https://huggingface.co/spaces/UNNAILab/EpInflammAge/blob/main/models/background-xai.pkl) should be downloaded from [HuggingFace](https://huggingface.co/spaces/UNNAILab/EpInflammAge/blob/main/models/) to ```models``` folder.
 
 ## Run Gradio application locally
 
