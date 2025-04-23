@@ -43,9 +43,9 @@ We present EpInflammAge, an explainable deep learning tool that integrates epige
 │   └── EpInflammAge                  <- EpInflammAge model
 │
 ├── notebooks                     <- Jupyter notebooks 
-│   ├── figures           <- Directory for jupyter notebooks that build individual figures
-│   │   ├── figure2a                         <- Plotting Figure 2A
-│   │   ├── figure2b                         <- Plotting Figure 2B
+│   ├── figures                       <- Directory for jupyter notebooks that build individual figures
+│   │   ├── figure2a                      <- Plotting Figure 2A
+│   │   ├── figure2b                      <- Plotting Figure 2B
 │   │   └── ...                           <- Plotting other Figures
 │   ├── 1-cytokines-regression        <- Training cytokines models
 │   ├── 2-age-regression              <- Training EpInflammAge
